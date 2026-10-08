@@ -1,4 +1,4 @@
-# CleanAI 🧹✨
+# CleanAI 
 
 **Automated Data Cleaning & Quality Analysis Platform**
 
@@ -8,7 +8,7 @@ Designed to address the classic "Garbage In, Garbage Out" challenge in data scie
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
 - [Key Features](#-key-features)
 - [Architecture & Tech Stack](#-architecture--tech-stack)
@@ -23,22 +23,22 @@ Designed to address the classic "Garbage In, Garbage Out" challenge in data scie
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-- 📊 **Automated Profiling & Statistics:** Instantly calculates dataset shape, column data types, cardinalities, missingness ratios, and continuous statistical metrics (mean, median, IQR, std dev)[cite: 4].
-- 🔍 **Multi-Dimensional Flaw Detection:**
+-  **Automated Profiling & Statistics:** Instantly calculates dataset shape, column data types, cardinalities, missingness ratios, and continuous statistical metrics (mean, median, IQR, std dev)[cite: 4].
+-  **Multi-Dimensional Flaw Detection:**
   - **Missingness:** Identifies `NaN`, `None`, empty strings, and whitespace[cite: 4].
   - **Duplicates:** Detects exact row-level and partial structural duplicates[cite: 5].
   - **Categorical Noise:** Spotlights casing inconsistencies (e.g., `morocco` vs `Morocco`) and untrimmed strings[cite: 5].
   - **Numeric Outliers:** Implements non-parametric Interquartile Range (IQR) detection to flag extreme anomalies[cite: 5].
   - **Domain Rules:** Highlights invalid domain-specific values (e.g., negative ages)[cite: 5].
-- 🛠️ **Human-in-the-Loop Configurator:** Never silently overwrites raw data. Offers configurable strategies per column (Mean, Median, Mode Imputation, Drop, Constant Fill, Standardize Text, Type Cast)[cite: 3, 4, 5].
-- 💯 **Dynamic Data Health Score:** Computes a custom 0–100 heuristic Quality Score ($QS$) before and after cleaning.
-- 📄 **Exportable Clean Data & Audit Trail:** Preview side-by-side comparative diffs and export clean CSV/Excel files alongside structured PDF quality audit reports.
+-  **Human-in-the-Loop Configurator:** Never silently overwrites raw data. Offers configurable strategies per column (Mean, Median, Mode Imputation, Drop, Constant Fill, Standardize Text, Type Cast)[cite: 3, 4, 5].
+-  **Dynamic Data Health Score:** Computes a custom 0–100 heuristic Quality Score ($QS$) before and after cleaning.
+-  **Exportable Clean Data & Audit Trail:** Preview side-by-side comparative diffs and export clean CSV/Excel files alongside structured PDF quality audit reports.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+##  Architecture & Tech Stack
 
 ```text
 [ Uploaded File Stream ]
