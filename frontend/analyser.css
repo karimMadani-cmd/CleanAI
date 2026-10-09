@@ -1,0 +1,318 @@
+
+/* =====================================
+   CLEANAI — PAGE D'ANALYSE
+===================================== */
+
+.analyser-page {
+    width: min(1100px, 90%);
+    margin: 0 auto;
+    padding: 75px 0 60px;
+}
+
+/* En-tête de la page */
+
+.analyser-heading {
+    max-width: 720px;
+    margin: 0 auto 45px;
+    text-align: center;
+}
+
+.analyser-heading h1 {
+    margin: 15px 0;
+    color: #173b32;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+}
+
+.analyser-heading h1 span {
+    color: #087f68;
+}
+
+.analyser-heading > p:last-child {
+    max-width: 600px;
+    margin: 0 auto;
+    color: #66756f;
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+/* Carte principale */
+
+.upload-card {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px;
+    background: #ffffff;
+    border: 1px solid #e4ece6;
+    border-radius: 24px;
+    box-shadow: 0 18px 55px rgba(23, 59, 50, 0.08);
+}
+
+/* Zone d'importation */
+
+.upload-area {
+    padding: 45px 20px;
+    text-align: center;
+    background: #f6faf6;
+    border: 2px dashed #a9cbb9;
+    border-radius: 18px;
+    transition: border-color 0.25s, background 0.25s;
+}
+
+.upload-area:hover {
+    border-color: #087f68;
+    background: #eff8f1;
+}
+
+.upload-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    color: #087f68;
+    background: #dff3e5;
+    border-radius: 20px;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.upload-area h2 {
+    margin: 0 0 10px;
+    color: #173b32;
+    font-size: 1.4rem;
+}
+
+.upload-area p {
+    margin: 7px 0;
+    color: #66756f;
+    line-height: 1.6;
+}
+
+.upload-area .upload-formats {
+    margin-top: 12px;
+    color: #8a9890;
+    font-size: 0.85rem;
+}
+
+/* Boutons */
+
+.upload-button {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 13px 24px;
+    color: #ffffff;
+    background: #087f68;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.25s;
+}
+
+.upload-button:hover {
+    background: #056653;
+    transform: translateY(-2px);
+}
+
+.analyse-button {
+    width: 100%;
+    margin-top: 22px;
+    padding: 16px;
+    color: #ffffff;
+    background: #087f68;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.25s;
+}
+
+.analyse-button:not(:disabled):hover {
+    background: #056653;
+    transform: translateY(-2px);
+}
+
+.analyse-button:disabled {
+    background: #b8c9c0;
+    cursor: not-allowed;
+}
+
+/* Aperçu de l'image */
+
+.image-preview {
+    margin-top: 22px;
+}
+
+.image-preview img {
+    display: block;
+    width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    background: #f6faf6;
+    border-radius: 14px;
+}
+
+.preview-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.preview-actions p {
+    margin: 0;
+    color: #43564c;
+    overflow-wrap: anywhere;
+}
+
+.remove-button {
+    padding: 9px 14px;
+    color: #b42318;
+    background: #fff0ee;
+    border: 1px solid #f3d0cc;
+    border-radius: 9px;
+    cursor: pointer;
+}
+
+.remove-button:hover {
+    background: #ffe3df;
+}
+
+/* Messages */
+
+.upload-error {
+    margin: 14px 0 0;
+    color: #b42318;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.demo-note {
+    margin: 16px 0 0;
+    color: #7b8981;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* Retour */
+
+.back-link {
+    display: block;
+    width: fit-content;
+    margin: 30px auto 0;
+    color: #087f68;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* Accessibilité clavier */
+
+.upload-button:focus-visible,
+.analyse-button:focus-visible,
+.remove-button:focus-visible,
+.back-link:focus-visible {
+    outline: 3px solid #b5df76;
+    outline-offset: 4px;
+}
+
+/* Responsive mobile */
+
+@media (max-width: 600px) {
+    .analyser-page {
+        width: 92%;
+        padding: 45px 0 35px;
+    }
+
+    .analyser-heading {
+        margin-bottom: 30px;
+    }
+
+    .analyser-heading h1 {
+        letter-spacing: -0.7px;
+    }
+
+    .upload-card {
+        padding: 16px;
+        border-radius: 18px;
+    }
+
+    .upload-area {
+        padding: 32px 14px;
+    }
+
+    .preview-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* Importation de fichiers CSV et Excel */
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #E6DDF7;
+    border-radius: 16px;
+    background: #F7F4FF;
+}
+
+.file-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: #EDE5FC;
+    font-size: 25px;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-details p {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.file-size {
+    margin-top: 6px !important;
+    color: #746C83;
+    font-size: 0.9rem;
+}
+
+.upload-area.drag-over {
+    border-color: #7546C8;
+    background: #F7F4FF;
+}
+
+.file-preview[hidden],
+.upload-area[hidden] {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .file-preview {
+        flex-wrap: wrap;
+        padding: 14px;
+    }
+
+    .file-details {
+        flex-basis: calc(100% - 70px);
+    }
+}

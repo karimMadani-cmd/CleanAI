@@ -123,13 +123,26 @@ function showNotification(message) {
 // 5. ANIMATIONS AU DÉFILEMENT
 // =====================================
 
+
 function initScrollAnimations() {
     const elements = document.querySelectorAll(
-        ".intro, .service-card"
+        ".hero-content, .hero-visual, .intro, .service-card"
     );
 
-    // Afficher normalement les éléments si cette API n'est pas disponible.
+    // Garder le contenu visible si l'API n'est pas disponible.
     if (!("IntersectionObserver" in window)) return;
+
+    // Préparer un délai progressif pour les cartes.
+    let serviceIndex = 0;
+
+    elements.forEach((element) => {
+        element.classList.add("reveal");
+
+        if (element.classList.contains("service-card")) {
+            element.style.transitionDelay = `${serviceIndex * 120}ms`;
+            serviceIndex++;
+        }
+    });
 
     const observer = new IntersectionObserver(
         (entries, currentObserver) => {
@@ -141,12 +154,12 @@ function initScrollAnimations() {
             });
         },
         {
-            threshold: 0.15
+            threshold: 0.12,
+            rootMargin: "0px 0px -30px 0px"
         }
     );
 
     elements.forEach((element) => {
-        element.classList.add("reveal");
         observer.observe(element);
     });
 }
