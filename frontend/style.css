@@ -1,0 +1,576 @@
+
+:root {
+    --primary: #087f68;
+    --primary-dark: #056653;
+    --background: #f7f9f6;
+    --surface: #ffffff;
+    --text: #172a25;
+    --muted: #718079;
+    --border: #e3eae5;
+    --accent: #d9f3a5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 90px;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================
+   2. NAVIGATION
+========================= */
+
+.navbar {
+    width: 100%;
+    min-height: 82px;
+    padding: 20px 8%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid var(--border);
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+}
+
+.logo span {
+    color: var(--primary);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+}
+
+.nav-links a {
+    color: #56665f;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+.nav-button,
+.primary-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.nav-button {
+    padding: 12px 20px;
+}
+
+.nav-button:hover,
+.primary-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+/* =========================
+   3. SECTION D'ACCUEIL
+========================= */
+
+.hero {
+    min-height: 610px;
+    padding: 90px 8%;
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: center;
+    gap: 70px;
+}
+
+.hero-content {
+    max-width: 620px;
+}
+
+.eyebrow {
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 22px;
+}
+
+.hero h1 {
+    font-size: clamp(38px, 4.3vw, 60px);
+    line-height: 1.13;
+    letter-spacing: -2.5px;
+    margin-bottom: 24px;
+}
+
+.hero h1 span {
+    color: var(--primary);
+}
+
+.hero-description {
+    max-width: 480px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.9;
+    margin-bottom: 32px;
+}
+
+.hero-buttons {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+}
+
+.primary-button {
+    padding: 15px 23px;
+}
+
+.secondary-button {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.secondary-button:hover {
+    color: var(--primary);
+}
+
+.hero-note {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 38px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #70ad48;
+    border-radius: 50%;
+}
+
+/* =========================
+   4. CARTE VISUELLE
+========================= */
+
+.hero-visual {
+    position: relative;
+    min-height: 390px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at 80% 15%, #d9f3a5 0, transparent 30%),
+        linear-gradient(145deg, #d9eee2, #a7d3bd 55%, #eaf4e8);
+    overflow: hidden;
+}
+
+.visual-card {
+    position: relative;
+    z-index: 1;
+    width: 76%;
+    padding: 34px 30px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 24px 70px rgba(24, 67, 48, 0.12);
+    backdrop-filter: blur(12px);
+}
+
+.visual-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--accent);
+    color: var(--primary-dark);
+    font-size: 27px;
+    margin-bottom: 28px;
+}
+
+.visual-label {
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+}
+
+.visual-card h2 {
+    font-size: clamp(23px, 2.5vw, 32px);
+    line-height: 1.25;
+    letter-spacing: -1px;
+}
+
+.visual-line {
+    width: 48px;
+    height: 3px;
+    background: var(--primary);
+    margin: 24px 0;
+}
+
+.visual-footer {
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+.floating-badge {
+    position: absolute;
+    right: 5%;
+    bottom: 9%;
+    z-index: 2;
+    padding: 12px 17px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(24, 67, 48, 0.12);
+    color: var(--primary-dark);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* =========================
+   5. PRÉSENTATION
+========================= */
+
+.intro {
+    padding: 95px 20px;
+    text-align: center;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.intro .eyebrow {
+    margin-bottom: 15px;
+}
+
+.intro h2,
+.services h2 {
+    font-size: clamp(30px, 3.5vw, 43px);
+    line-height: 1.2;
+    letter-spacing: -1.5px;
+}
+
+.intro > p:last-child {
+    max-width: 610px;
+    margin: 22px auto 0;
+    color: var(--muted);
+    line-height: 1.9;
+}
+
+/* =========================
+   6. SERVICES
+========================= */
+
+.services {
+    padding: 95px 8%;
+    text-align: center;
+}
+
+.services > .eyebrow {
+    margin-bottom: 15px;
+}
+
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 48px;
+    text-align: left;
+}
+
+.service-card {
+    padding: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 40px rgba(23, 42, 37, 0.07);
+}
+
+.service-number {
+    display: inline-block;
+    margin-bottom: 25px;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.service-card h3 {
+    font-size: 19px;
+    margin-bottom: 12px;
+}
+
+.service-card p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+/* =========================
+   7. PIED DE PAGE
+========================= */
+
+footer {
+    padding: 30px 8%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    background: white;
+    border-top: 1px solid var(--border);
+}
+
+footer p {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* =========================
+   8. RESPONSIVE MOBILE
+========================= */
+
+@media (max-width: 900px) {
+    .hero {
+        grid-template-columns: 1fr;
+        gap: 45px;
+        padding-top: 65px;
+        padding-bottom: 65px;
+    }
+
+    .hero-content {
+        max-width: 700px;
+    }
+
+    .hero-visual {
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+    }
+
+    .service-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 18px 5%;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        font-size: 24px;
+    }
+
+    .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .nav-links a {
+        font-size: 12px;
+    }
+
+    .nav-button {
+        padding: 10px 13px;
+        font-size: 12px;
+    }
+
+    .hero {
+        padding: 55px 5%;
+    }
+
+    .hero h1 {
+        letter-spacing: -1.5px;
+    }
+
+    .hero-description {
+        font-size: 14px;
+    }
+
+    .hero-buttons {
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .primary-button {
+        padding: 13px 16px;
+        font-size: 12px;
+    }
+
+    .hero-visual {
+        min-height: 330px;
+    }
+
+    .visual-card {
+        width: 82%;
+        padding: 25px 22px;
+    }
+
+    .intro {
+        padding: 70px 6%;
+    }
+
+    .services {
+        padding: 70px 5%;
+    }
+
+    .service-card {
+        padding: 25px;
+    }
+
+    footer {
+        padding: 25px 5%;
+    }
+}
+/* Bouton du menu mobile */
+
+.menu-toggle {
+    display: none;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Notification */
+
+.cleanai-notification {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1000;
+    max-width: calc(100% - 48px);
+    padding: 15px 20px;
+    background: var(--primary-dark);
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.16);
+    font-size: 14px;
+
+    opacity: 0;
+    transform: translateY(15px);
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+}
+
+.cleanai-notification.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Apparition des sections */
+
+.reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Menu et navigation sur petits écrans */
+
+@media (max-width: 600px) {
+    .navbar {
+        position: relative;
+    }
+
+    .menu-toggle {
+        display: block;
+        margin-left: auto;
+    }
+
+    .nav-links {
+        display: none;
+        order: 4;
+        width: 100%;
+        padding: 12px 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+    }
+
+    .nav-links.is-open {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 12px;
+        font-size: 14px;
+        border-top: 1px solid var(--border);
+    }
+}
+
+/* Respecter la préférence de réduction des animations */
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .reveal,
+    .cleanai-notification,
+    .service-card {
+        transition: none;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+    }
+}
