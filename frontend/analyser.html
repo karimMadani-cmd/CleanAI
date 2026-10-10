@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Analysez les données sur les déchets avec CleanAI.">
+    <title>Analyser les données | CleanAI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="analyser.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">Clean<span>AI</span></a>
+
+        <nav class="nav-links">
+            <a href="index.html">Accueil</a>
+            <a href="index.html#apropos">À propos</a>
+            <a href="index.html#services">Services</a>
+        </nav>
+
+        <a href="index.html" class="nav-button">Retour à l'accueil</a>
+    </header>
+
+    <main class="analyser-page">
+        <section class="analyser-heading">
+            <p class="eyebrow">CLEANAI INTELLIGENCE</p>
+
+            <h1>Analysez vos données sur les <span>déchets.</span></h1>
+
+            <p>
+                Importez un fichier CSV ou Excel pour préparer l'analyse
+                de vos données et mieux comprendre la gestion des déchets.
+            </p>
+        </section>
+
+        <section class="upload-card">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">↑</div>
+
+                <h2>Importez un fichier de données</h2>
+
+                <p>Choisissez un fichier depuis votre appareil.</p>
+
+                <p class="upload-formats">
+                    Formats acceptés : CSV, XLS et XLSX
+                </p>
+
+                <label for="dataFile" class="upload-button">
+                    Choisir un fichier
+                </label>
+
+                <input
+                    type="file"
+                    id="dataFile"
+                    accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    hidden
+                >
+            </div>
+
+            <div class="file-preview" id="filePreview" hidden>
+                <div class="file-icon">📄</div>
+
+                <div class="file-details">
+                    <p id="fileName">Aucun fichier sélectionné</p>
+                    <p id="fileSize" class="file-size"></p>
+                </div>
+
+                <button
+                    type="button"
+                    id="removeFile"
+                    class="remove-button"
+                >
+                    Supprimer
+                </button>
+            </div>
+
+            <p class="upload-error" id="uploadError" role="alert" hidden></p>
+
+            <button
+                type="button"
+                id="analyseButton"
+                class="analyse-button"
+                disabled
+            >
+                Préparer l'analyse
+            </button>
+
+            <p class="demo-note">
+                L'analyse des données sera activée après la connexion
+                au système de traitement et d'intelligence artificielle.
+            </p>
+        </section>
+
+        <a href="index.html" class="back-link">← Retour à l'accueil</a>
+    </main>
+
+    <script src="analyser.js"></script>
+</body>
+</html>
