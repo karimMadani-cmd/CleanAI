@@ -987,10 +987,13 @@ body {
     background: var(--premium-lime);
 }
 
+
 .floating-badge {
     position: absolute;
-    right: -12px;
+    right: 12px;
     bottom: 22px;
+    z-index: 2;
+    max-width: calc(100% - 24px);
     padding: 14px 19px;
     border: 1px solid rgba(8, 127, 104, 0.09);
     border-radius: 999px;
@@ -998,10 +1001,10 @@ body {
     color: var(--premium-dark);
     font-size: 12px;
     font-weight: 750;
+    white-space: nowrap;
     box-shadow: 0 12px 32px rgba(18, 59, 50, 0.12);
     animation: badge-float 4s ease-in-out infinite;
 }
-
 @keyframes badge-float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-7px); }
@@ -1238,4 +1241,10 @@ button:focus-visible {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+.service-action {
+    margin-top: 20px;
+    padding: 12px 18px;
+    font-size: 13px;
 }
