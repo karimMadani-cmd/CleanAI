@@ -139,12 +139,39 @@ analyseButton.addEventListener("click", async () => {
     analyseButton.textContent = "Analyse en cours...";
 
     try {
+        
         // 1. Lire le fichier CSV ou Excel
         const buffer = await file.arrayBuffer();
 
-        const workbook = XLSX.read(buffer, {
-            type: "array"
-        });
+        const extension = file.name
+            .slice(file.name.lastIndexOf("."))
+            .toLowerCase();
+
+        let workbook;
+
+        if (extension === ".csv") {
+            // Récupérer l'encodage choisi par l'utilisateur
+            const encodingSelector = document.getElementById("fileEncoding");
+            const encoding = encodingSelector
+                ? encodingSelector.value
+                : "UTF-8";
+
+            // Décoder le CSV avec l'encodage sélectionné
+            const decoder = new TextDecoder(encoding);
+            const csvText = decoder.decode(buffer);
+
+            // Lire le contenu CSV déjà décodé
+            workbook = XLSX.read(csvText, {
+                type: "string",
+                raw: false
+            });
+        } else {
+            // Conserver la lecture habituelle des fichiers Excel
+            workbook = XLSX.read(buffer, {
+                type: "array"
+            });
+        }
+
 
         const firstSheetName = workbook.SheetNames[0];
 
@@ -196,24 +223,19 @@ analyseButton.addEventListener("click", async () => {
             }
         });
 
-        // 4. Compter les lignes dupliquées
-        const seenRows = new Set();
-        let duplicateRows = 0;
+        // 4. Compter les lignes dupliquées en ignorant les colonnes ID.
+const seenRows = new Set();
+let duplicateRows = 0;
 
-        dataRows.forEach(row => {
-            const normalizedRow = Array.from(
-                { length: columnCount },
-                (_, index) => String(row[index] ?? "").trim()
-            );
+dataRows.forEach(row => {
+    const rowKey = getDuplicateKey(row, header);
 
-            const rowKey = JSON.stringify(normalizedRow);
-
-            if (seenRows.has(rowKey)) {
-                duplicateRows++;
-            } else {
-                seenRows.add(rowKey);
-            }
-        });
+    if (seenRows.has(rowKey)) {
+        duplicateRows++;
+    } else {
+        seenRows.add(rowKey);
+    }
+});
 
 // Conserver les données analysées
 analyzedData = {
@@ -309,7 +331,19 @@ function renderDashboard(stats) {
         behavior: "smooth",
         block: "start"
     });
-    
+  
+    // Animation GSAP des cartes de statistiques
+    if (typeof gsap !== "undefined") {
+        gsap.from(dashboard.querySelectorAll(".metric-card"), {
+            y: 20,
+            opacity: 0,
+            scale: 0.98,
+            duration: 0.4,
+            stagger: 0.1,
+            ease: "power2.out"
+        });
+    }
+  
 }
 function renderDiagnostics(data) {
     let section = document.getElementById("diagnosticsSection");
@@ -330,18 +364,44 @@ function renderDiagnostics(data) {
     const seen = new Set();
     const rowIssues = [];
 
+    // Repérer les colonnes qui contiennent un âge.
+const ageColumns = headers
+    .map((header, index) => ({
+        name: String(header ?? "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase(),
+        index
+    }))
+    .filter(column => column.name.includes("age"))
+    .map(column => column.index);
+
     rows.forEach((row, index) => {
         const values = Array.from(
             { length: columnCount },
             (_, column) => String(row[column] ?? "").trim()
         );
 
-        const key = JSON.stringify(values);
+const key = getDuplicateKey(row, headers);
         const issues = [];
 
         if (values.some(value => value === "")) {
             issues.push("Valeurs manquantes");
         }
+
+        // Détecter les âges impossibles ou invraisemblables.
+ageColumns.forEach(column => {
+    const value = values[column];
+
+    // Ignorer les valeurs vides : elles sont déjà signalées.
+    if (value === "") return;
+
+    const age = Number(value);
+
+    if (Number.isFinite(age) && (age < 0 || age > 100)) {
+        issues.push("Âge aberrant");
+    }
+});
 
         if (seen.has(key)) {
             issues.push("Ligne dupliquée");
@@ -404,6 +464,10 @@ function renderDiagnostics(data) {
                 <strong>${inconsistentCount}</strong>
                 <span>Colonnes avec variantes de casse</span>
             </div>
+            <div class="diagnostic-stat">
+    <strong>${rowIssues.filter(row => row.issues.includes("Âge aberrant")).length}</strong>
+    <span>Lignes avec un âge aberrant</span>
+</div>
         </div>
 
         <div class="diagnostics-filters" role="group" aria-label="Filtrer les lignes">
@@ -488,6 +552,46 @@ function escapeHTML(value) {
         "'": "&#39;"
     })[character]);
 }
+
+function isIdColumn(header) {
+    const normalizedHeader = String(header ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]+/g, "");
+
+    return [
+        "id",
+        "idclient",
+        "clientid",
+        "identifiant",
+        "identifiantclient"
+    ].includes(normalizedHeader);
+}
+
+function getDuplicateKey(row, headers) {
+    // Ignorer les colonnes d'identification.
+    let columnsToCompare = headers
+        .map((header, index) => ({ header, index }))
+        .filter(column => !isIdColumn(column.header));
+
+    // Si toutes les colonnes sont des identifiants,
+    // comparer toutes les colonnes pour éviter les faux doublons.
+    if (columnsToCompare.length === 0) {
+        columnsToCompare = headers.map((header, index) => ({
+            header,
+            index
+        }));
+    }
+
+    const normalizedValues = columnsToCompare.map(({ index }) =>
+        String(row[index] ?? "")
+            .trim()
+            .toLocaleLowerCase("fr")
+    );
+
+    return JSON.stringify(normalizedValues);
+}
+
 function renderCleaningConfigurator(data) {
     let section = document.getElementById("cleaningSection");
 
@@ -528,13 +632,18 @@ function renderCleaningConfigurator(data) {
             </select>
 
             <label for="textStrategy">Format du texte</label>
+            
             <select id="textStrategy">
                 <option value="none">Ne rien modifier</option>
                 <option value="trim">Supprimer les espaces inutiles</option>
                 <option value="title">Mettre En Forme Titre</option>
                 <option value="lower">Convertir en minuscules</option>
             </select>
-
+    <label for="duplicateStrategy">Lignes dupliquées</label>
+<select id="duplicateStrategy">
+    <option value="keep">Conserver les doublons</option>
+    <option value="remove">Supprimer les doublons</option>
+</select>
             <button type="button" id="saveCleaningRule" class="cleaning-button">
                 Enregistrer la règle
             </button>
@@ -552,6 +661,7 @@ function renderCleaningConfigurator(data) {
     const columnSelect = section.querySelector("#cleaningColumn");
     const missingSelect = section.querySelector("#missingStrategy");
     const textSelect = section.querySelector("#textStrategy");
+    const duplicateSelect = section.querySelector("#duplicateStrategy");
     const message = section.querySelector("#cleaningMessage");
     const rulesList = section.querySelector("#cleaningRulesList");
 
@@ -613,11 +723,33 @@ function renderCleaningConfigurator(data) {
             )
         );
 
+
         // Appliquer les autres règles sur une copie des données.
         Object.entries(cleaningRules).forEach(([index, rule]) => {
             const column = Number(index);
             const values = cleanedData.rows.map(row => row[column]);
+            // Détecter automatiquement les colonnes d'âge.
+const headerName = String(cleanedData.headers[column] ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 
+const isAgeColumn = headerName.includes("age");
+
+// Remplacer les âges aberrants par des valeurs manquantes.
+if (isAgeColumn) {
+    cleanedData.rows.forEach(row => {
+        const value = String(row[column] ?? "").trim();
+
+        if (value !== "") {
+            const age = Number(value);
+
+            if (Number.isFinite(age) && (age < 0 || age > 100)) {
+                row[column] = "";
+            }
+        }
+    });
+}
             const presentValues = values
                 .map(value => String(value ?? "").trim())
                 .filter(Boolean);
@@ -682,6 +814,20 @@ function renderCleaningConfigurator(data) {
                 }
             });
         });
+        if (duplicateSelect.value === "remove") {
+            const seenRows = new Set();
+
+            cleanedData.rows = cleanedData.rows.filter(row => {
+                const rowKey = getDuplicateKey(row, cleanedData.headers);
+
+                if (seenRows.has(rowKey)) {
+                    return false;
+                }
+
+                seenRows.add(rowKey);
+                return true;
+            });
+        }
 
         message.textContent =
             `Nettoyage terminé : ${cleanedData.rows.length} ligne(s) conservée(s).`;
@@ -741,6 +887,7 @@ function renderCleaningPreview() {
     preview.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+
 function renderComparison() {
     if (!originalData || !cleanedData) {
         return;
@@ -757,7 +904,122 @@ function renderComparison() {
             .insertAdjacentElement("afterend", section);
     }
 
-    const removedRows = originalData.rows.length - cleanedData.rows.length;
+    const originalRows = originalData.rows;
+    const cleanedRows = cleanedData.rows;
+    const removedRows = Math.max(0, originalRows.length - cleanedRows.length);
+
+    // Associer chaque ligne nettoyée à la ligne originale la plus proche.
+    // Cela évite de comparer systématiquement des lignes différentes
+    // lorsque certaines lignes ont été supprimées.
+    const matchedOriginalIndexes = new Map();
+    const usedOriginalIndexes = new Set();
+
+    cleanedRows.forEach((cleanedRow, cleanedIndex) => {
+        let bestIndex = -1;
+        let bestScore = -1;
+
+        originalRows.forEach((originalRow, originalIndex) => {
+            if (usedOriginalIndexes.has(originalIndex)) {
+                return;
+            }
+
+            let score = 0;
+
+            originalData.headers.forEach((_, columnIndex) => {
+                const originalValue = String(originalRow[columnIndex] ?? "");
+                const cleanedValue = String(cleanedRow[columnIndex] ?? "");
+
+                if (originalValue === cleanedValue) {
+                    score++;
+                }
+            });
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestIndex = originalIndex;
+            }
+        });
+
+        if (bestIndex !== -1) {
+            matchedOriginalIndexes.set(cleanedIndex, bestIndex);
+            usedOriginalIndexes.add(bestIndex);
+        }
+    });
+
+    // Une cellule rouge dans l'original indique une valeur modifiée
+    // ou une ligne supprimée. Une cellule verte après nettoyage
+    // indique une valeur modifiée ou complétée.
+    const originalRowsHTML = originalRows.slice(0, 10).map((row, rowIndex) => {
+        const matchedCleanedIndex = [...matchedOriginalIndexes.entries()]
+            .find(([, originalIndex]) => originalIndex === rowIndex)?.[0];
+
+        if (matchedCleanedIndex === undefined) {
+            return `
+                <tr class="row-deleted">
+                    ${originalData.headers.map((_, columnIndex) => `
+                        <td class="cell-deleted">
+                            ${escapeHTML(row[columnIndex] ?? "")}
+                        </td>
+                    `).join("")}
+                </tr>
+            `;
+        }
+
+        const cleanedRow = cleanedRows[matchedCleanedIndex];
+
+        return `
+            <tr>
+                ${originalData.headers.map((_, columnIndex) => {
+                    const originalValue = String(row[columnIndex] ?? "");
+                    const cleanedValue = String(cleanedRow[columnIndex] ?? "");
+                    const changed = originalValue !== cleanedValue;
+
+                    return `
+                        <td class="${changed ? "cell-changed" : ""}">
+                            ${escapeHTML(row[columnIndex] ?? "")}
+                        </td>
+                    `;
+                }).join("")}
+            </tr>
+        `;
+    }).join("");
+
+    const cleanedRowsHTML = cleanedRows.slice(0, 10).map((row, rowIndex) => {
+        const originalIndex = matchedOriginalIndexes.get(rowIndex);
+        const originalRow = originalIndex !== undefined
+            ? originalRows[originalIndex]
+            : null;
+
+        return `
+            <tr>
+                ${cleanedData.headers.map((_, columnIndex) => {
+                    const cleanedValue = String(row[columnIndex] ?? "");
+                    const originalValue = originalRow
+                        ? String(originalRow[columnIndex] ?? "")
+                        : "";
+
+                    const changed = originalRow && originalValue !== cleanedValue;
+                    const imputed = originalRow &&
+                        originalValue.trim() === "" &&
+                        cleanedValue.trim() !== "";
+
+                    let cellClass = "";
+
+                    if (imputed) {
+                        cellClass = "cell-imputed";
+                    } else if (changed) {
+                        cellClass = "cell-cleaned";
+                    }
+
+                    return `
+                        <td class="${cellClass}">
+                            ${escapeHTML(row[columnIndex] ?? "")}
+                        </td>
+                    `;
+                }).join("")}
+            </tr>
+        `;
+    }).join("");
 
     section.innerHTML = `
         <div class="comparison-heading">
@@ -769,18 +1031,24 @@ function renderComparison() {
         <div class="comparison-stats">
             <div class="comparison-stat">
                 <span>Lignes originales</span>
-                <strong>${originalData.rows.length}</strong>
+                <strong>${originalRows.length}</strong>
             </div>
 
             <div class="comparison-stat">
                 <span>Lignes nettoyées</span>
-                <strong>${cleanedData.rows.length}</strong>
+                <strong>${cleanedRows.length}</strong>
             </div>
 
             <div class="comparison-stat">
                 <span>Lignes supprimées</span>
                 <strong>${removedRows}</strong>
             </div>
+        </div>
+
+        <div class="comparison-legend">
+            <span><i class="legend-color legend-red"></i> Valeur modifiée ou ligne supprimée dans l'original</span>
+            <span><i class="legend-color legend-green"></i> Valeur nettoyée</span>
+            <span><i class="legend-color legend-light-green"></i> Valeur manquante complétée</span>
         </div>
 
         <div class="comparison-grid">
@@ -796,13 +1064,7 @@ function renderComparison() {
                             </tr>
                         </thead>
                         <tbody>
-                            ${originalData.rows.slice(0, 10).map(row => `
-                                <tr>
-                                    ${originalData.headers.map((_, index) =>
-                                        `<td>${escapeHTML(row[index] ?? "")}</td>`
-                                    ).join("")}
-                                </tr>
-                            `).join("")}
+                            ${originalRowsHTML}
                         </tbody>
                     </table>
                 </div>
@@ -820,13 +1082,7 @@ function renderComparison() {
                             </tr>
                         </thead>
                         <tbody>
-                            ${cleanedData.rows.slice(0, 10).map(row => `
-                                <tr>
-                                    ${cleanedData.headers.map((_, index) =>
-                                        `<td>${escapeHTML(row[index] ?? "")}</td>`
-                                    ).join("")}
-                                </tr>
-                            `).join("")}
+                            ${cleanedRowsHTML}
                         </tbody>
                     </table>
                 </div>
@@ -837,20 +1093,26 @@ function renderComparison() {
             Les tableaux affichent jusqu'à 10 lignes chacun.
             Le fichier original n'a pas été modifié.
         </p>
+
         <div class="export-actions">
-    <button type="button" id="exportCSV" class="cleaning-button">
-        Exporter en CSV
-    </button>
+            <button type="button" id="exportCSV" class="cleaning-button">
+                Exporter en CSV
+            </button>
 
-<button type="button" id="exportExcel" class="cleaning-button">
-Exporter en Excel
+            <button type="button" id="exportExcel" class="cleaning-button">
+                Exporter en Excel
+            </button>
+            <button type="button" id="exportPDF" class="cleaning-button">
+    Exporter le rapport PDF
 </button>
-<p id="exportMessage" role="status"></p>
-</div>
-        `;
 
-   section.scrollIntoView({ behavior: "smooth", block: "start" });
+            <p id="exportMessage" role="status"></p>
+        </div>
+    `;
+
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
 
 function renderQualityAudit(data) {
     const audit = calculateQualityAudit(data);
@@ -894,11 +1156,28 @@ function renderQualityAudit(data) {
         </div>
 
         <div class="quality-audit-card">
-            <div class="quality-score">
-                <span>Score de qualité</span>
-                <strong>${audit.score}<small>/100</small></strong>
-                <p>${qualityLabel}</p>
-            </div>
+           
+<div class="quality-score">
+    <span>Score de qualité</span>
+
+    <div class="score-circle" data-score="${audit.score}">
+        <svg viewBox="0 0 120 120" aria-label="Score de qualité sur 100">
+            <circle class="score-circle-bg"
+                    cx="60" cy="60" r="50" />
+
+            <circle class="score-circle-progress"
+                    cx="60" cy="60" r="50" />
+        </svg>
+
+        <div class="score-circle-value">
+            <strong class="score-number">0</strong>
+            <small>/100</small>
+        </div>
+    </div>
+
+    <p>${qualityLabel}</p>
+</div>
+
 
             <div class="quality-progress">
                 <div class="quality-progress-track">
@@ -932,6 +1211,32 @@ function renderQualityAudit(data) {
             </p>
         </div>
     `;
+    
+    // Animer le cercle et le nombre du score
+    if (typeof gsap !== "undefined") {
+        const circle = section.querySelector(".score-circle-progress");
+        const scoreNumber = section.querySelector(".score-number");
+        const score = Number(audit.score);
+        const circumference = 2 * Math.PI * 50;
+
+        gsap.to(circle, {
+            strokeDashoffset: circumference * (1 - score / 100),
+            duration: 1.2,
+            ease: "power2.out"
+        });
+
+        const counter = { value: 0 };
+
+        gsap.to(counter, {
+            value: score,
+            duration: 1.2,
+            ease: "power2.out",
+            onUpdate: () => {
+                scoreNumber.textContent = Math.round(counter.value);
+            }
+        });
+    }
+
 }
 
 
@@ -1020,9 +1325,22 @@ function calculateQualityAudit(data) {
         }
 
         const normalizedRow = Array.from(
-            { length: totalColumns },
-            (_, index) => String(row[index] ?? "").trim()
-        );
+    { length: cleanedData.columnCount },
+    (_, index) => {
+        const header = String(cleanedData.headers[index] ?? "")
+            .trim()
+            .toLowerCase();
+
+        // Ignorer les colonnes servant d'identifiant unique.
+        if (header === "id" || header.endsWith("_id")) {
+            return null;
+        }
+
+        return String(row[index] ?? "")
+            .trim()
+            .toLowerCase();
+    }
+);
 
         const rowKey = JSON.stringify(normalizedRow);
 
@@ -1050,3 +1368,407 @@ function calculateQualityAudit(data) {
         totalCells
     };
 }
+
+/* ===================================
+   ANIMATIONS GSAP - CLEANAI
+=================================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Vérifier que GSAP est disponible
+    if (typeof gsap === "undefined") {
+        console.warn("GSAP n'est pas chargé.");
+        return;
+    }
+
+    // Apparition de la barre du pipeline
+    gsap.from(".pipeline-nav", {
+        y: -15,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power2.out"
+    });
+
+    // Apparition progressive des étapes
+    gsap.from(".pipeline-step", {
+        y: 10,
+        opacity: 0,
+        duration: 0.4,
+        stagger: 0.08,
+        ease: "power2.out",
+        delay: 0.15
+    });
+});
+
+function getCleanAILogoSVG() {
+    return `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="160" height="160" viewBox="0 0 40 40"
+         fill="none">
+        <rect width="40" height="40" rx="13" fill="#056653"/>
+        <path d="M30 7C17 7 8 14 8 24C8 30 12 34 18 33C28 31 32 19 30 7Z"
+              fill="#D9F3A5"/>
+        <path d="M10 31C15 24 20 19 28 12"
+              stroke="#FFFFFF"
+              stroke-width="2.5"
+              stroke-linecap="round"/>
+        <path d="M29 3L31 8L36 10L31 12L29 17L27 12L22 10L27 8Z"
+              fill="#FFFFFF"/>
+    </svg>`;
+}
+
+function svgToPng(svgString) {
+    return new Promise((resolve, reject) => {
+        const blob = new Blob([svgString], {
+            type: "image/svg+xml;charset=utf-8"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const image = new Image();
+
+        image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 160;
+            canvas.height = 160;
+
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0, 160, 160);
+
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL("image/png"));
+        };
+
+        image.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("Impossible de convertir le logo CleanAI."));
+        };
+
+        image.src = url;
+    });
+}
+
+
+async function exportQualityReportPDF() {
+    if (!originalData || !cleanedData) {
+        alert("Veuillez d'abord importer un fichier et effectuer le nettoyage.");
+        return;
+    }
+
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("La bibliothèque PDF n'est pas chargée. Vérifiez votre connexion Internet.");
+        return;
+    }
+    const logoPng = await svgToPng(getCleanAILogoSVG());
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 16;
+    const contentWidth = pageWidth - margin * 2;
+
+    const green = [8, 127, 104];
+    const darkGreen = [5, 102, 83];
+    const mauve = [133, 91, 166];
+    const dark = [35, 43, 55];
+    const muted = [105, 116, 130];
+    const light = [245, 248, 247];
+    const paleGreen = [225, 245, 235];
+    const paleRed = [254, 235, 235];
+    const red = [185, 48, 48];
+    const white = [255, 255, 255];
+
+    const originalRows = originalData.rows;
+    const cleanedRows = cleanedData.rows;
+
+    const countMissing = (rows) => {
+        let count = 0;
+
+        rows.forEach(row => {
+            row.forEach(value => {
+                if (
+                    value === null ||
+                    value === undefined ||
+                    String(value).trim() === ""
+                ) {
+                    count++;
+                }
+            });
+        });
+
+        return count;
+    };
+
+    const countDuplicates = (rows) => {
+        const seen = new Set();
+        let duplicates = 0;
+
+        rows.forEach(row => {
+            const key = getDuplicateKey(row, originalData.headers);
+
+            if (seen.has(key)) {
+                duplicates++;
+            } else {
+                seen.add(key);
+            }
+        });
+
+        return duplicates;
+    };
+
+    const missingBefore = countMissing(originalRows);
+    const missingAfter = countMissing(cleanedRows);
+    const duplicatesBefore = countDuplicates(originalRows);
+    const duplicatesAfter = countDuplicates(cleanedRows);
+    const removedRows = Math.max(0, originalRows.length - cleanedRows.length);
+
+    const auditSection = document.getElementById("qualityAuditSection");
+    const scoreElement = auditSection
+        ? auditSection.querySelector(".score-number")
+        : null;
+
+    const score = scoreElement
+        ? scoreElement.textContent.trim()
+        : "Non disponible";
+
+    const scoreLabel = score === "Non disponible"
+        ? score
+        : `${score}/100`;
+
+    const date = new Date().toLocaleDateString("fr-FR");
+
+    // En-tête du rapport CleanAI
+    pdf.setFillColor(...darkGreen);
+    pdf.rect(0, 0, pageWidth, 43, "F");
+
+// Logo CleanAI identique à celui du site
+pdf.addImage(logoPng, "PNG", margin, 5, 16, 16);
+
+// Nom du logo
+pdf.setTextColor(255, 255, 255);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(23);
+pdf.text("CleanAI", 36, 17);
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(9);
+pdf.text("SMART DATA CLEANING", 36, 24);
+
+    pdf.setFontSize(17);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Rapport de qualite", margin, 37);
+
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Genere le ${date}`, pageWidth - margin, 36, {
+        align: "right"
+    });
+
+
+    // Introduction
+    let y = 55;
+
+    pdf.setTextColor(...dark);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("Vue d'ensemble", margin, y);
+
+    y += 7;
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(...muted);
+    pdf.text(
+        "Synthese de la qualite des donnees avant et apres nettoyage.",
+        margin,
+        y
+    );
+
+    // Cartes statistiques
+    y += 8;
+    const gap = 4;
+    const cardWidth = (contentWidth - gap * 3) / 4;
+    const cardHeight = 27;
+
+    const metrics = [
+        {
+            label: "Score qualite",
+            value: scoreLabel,
+            color: mauve
+        },
+        {
+            label: "Lignes finales",
+            value: String(cleanedRows.length),
+            color: green
+        },
+        {
+            label: "Valeurs manquantes",
+            value: `${missingBefore} > ${missingAfter}`,
+            color: missingAfter < missingBefore ? green : red
+        },
+        {
+            label: "Lignes supprimees",
+            value: String(removedRows),
+            color: green
+        }
+    ];
+
+    metrics.forEach((metric, index) => {
+        const x = margin + index * (cardWidth + gap);
+
+        pdf.setFillColor(...light);
+        pdf.setDrawColor(225, 232, 229);
+        pdf.roundedRect(x, y, cardWidth, cardHeight, 3, 3, "FD");
+
+        pdf.setFillColor(...metric.color);
+        pdf.roundedRect(x, y, 2, cardHeight, 1, 1, "F");
+
+        pdf.setTextColor(...muted);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7);
+        pdf.text(metric.label, x + 5, y + 8);
+
+        pdf.setTextColor(...metric.color);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(metric.value.length > 10 ? 10 : 14);
+        pdf.text(metric.value, x + 5, y + 19);
+    });
+
+    // Tableau comparatif
+    y += cardHeight + 15;
+
+    pdf.setTextColor(...dark);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("Comparaison avant / apres", margin, y);
+
+    y += 7;
+
+    const columns = [
+        { label: "Indicateur", x: margin, width: 65 },
+        { label: "Avant", x: margin + 65, width: 36 },
+        { label: "Apres", x: margin + 101, width: 36 },
+        { label: "Evolution", x: margin + 137, width: contentWidth - 137 }
+    ];
+
+    pdf.setFillColor(...darkGreen);
+    pdf.roundedRect(margin, y, contentWidth, 10, 2, 2, "F");
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(...white);
+
+    columns.forEach(column => {
+        pdf.text(column.label, column.x + 3, y + 6.5);
+    });
+
+    y += 10;
+
+    const tableRows = [
+        {
+            label: "Nombre de lignes",
+            before: String(originalRows.length),
+            after: String(cleanedRows.length),
+            result: removedRows > 0 ? `-${removedRows} ligne(s)` : "Inchange"
+        },
+        {
+            label: "Valeurs manquantes",
+            before: String(missingBefore),
+            after: String(missingAfter),
+            result: missingAfter < missingBefore
+                ? "Amelioration"
+                : missingAfter === missingBefore
+                    ? "Inchange"
+                    : "A verifier"
+        },
+        {
+            label: "Lignes dupliquees",
+            before: String(duplicatesBefore),
+            after: String(duplicatesAfter),
+            result: duplicatesAfter < duplicatesBefore
+                ? "Amelioration"
+                : duplicatesAfter === duplicatesBefore
+                    ? "Inchange"
+                    : "A verifier"
+        }
+    ];
+
+    tableRows.forEach((row, index) => {
+        pdf.setFillColor(...(index % 2 === 0 ? light : white));
+        pdf.rect(margin, y, contentWidth, 12, "F");
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(...dark);
+        pdf.text(row.label, columns[0].x + 3, y + 7.5);
+        pdf.text(row.before, columns[1].x + 3, y + 7.5);
+        pdf.text(row.after, columns[2].x + 3, y + 7.5);
+
+        const isImproved = row.result === "Amelioration";
+        pdf.setTextColor(...(isImproved ? green : muted));
+        pdf.text(row.result, columns[3].x + 3, y + 7.5);
+
+        y += 12;
+    });
+
+    // Conclusion
+    y += 12;
+
+    pdf.setFillColor(...paleGreen);
+    pdf.roundedRect(margin, y, contentWidth, 29, 3, 3, "F");
+
+    pdf.setTextColor(...darkGreen);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.text("Bilan du nettoyage", margin + 5, y + 8);
+
+    let conclusion;
+
+    if (missingAfter === 0 && duplicatesAfter === 0) {
+        conclusion =
+            "Aucune valeur manquante ni ligne dupliquee detectee dans les donnees nettoyees.";
+    } else if (missingAfter < missingBefore || duplicatesAfter < duplicatesBefore) {
+        conclusion =
+            "La qualite des donnees s'est amelioree, mais certaines anomalies peuvent encore necessiter une verification.";
+    } else {
+        conclusion =
+            "Certaines anomalies restent presentes. Examinez les diagnostics et les regles de nettoyage appliquees.";
+    }
+
+    pdf.setTextColor(...dark);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8.5);
+
+    const conclusionLines = pdf.splitTextToSize(
+        conclusion,
+        contentWidth - 10
+    );
+
+    pdf.text(conclusionLines, margin + 5, y + 16);
+
+    // Pied de page
+    pdf.setDrawColor(225, 232, 229);
+    pdf.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+
+    pdf.setTextColor(...muted);
+    pdf.setFontSize(8);
+    pdf.text("CleanAI | Rapport genere automatiquement", margin, pageHeight - 9);
+    pdf.text("1", pageWidth - margin, pageHeight - 9, { align: "right" });
+
+    pdf.save("CleanAI_Rapport_Qualite.pdf");
+
+    const message = document.getElementById("exportMessage");
+
+    if (message) {
+        message.textContent = "Le rapport PDF a ete telecharge.";
+    }
+}
+
+document.addEventListener("click", function (event) {
+    if (event.target && event.target.id === "exportPDF") {
+        exportQualityReportPDF();
+    }
+});
+
