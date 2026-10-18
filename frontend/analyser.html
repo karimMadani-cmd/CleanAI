@@ -10,17 +10,74 @@
     <link rel="stylesheet" href="analyser.css">
 </head>
 <body>
-    <header class="navbar">
-        <a href="index.html" class="logo">Clean<span>AI</span></a>
+    
+<header class="navbar">
 
-        <nav class="nav-links">
-            <a href="index.html">Accueil</a>
-            <a href="index.html#apropos">À propos</a>
-            <a href="index.html#services">Services</a>
-        </nav>
+<a href="index.html" class="logo cleanai-logo">
+    <span class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none">
+            <path d="M30 7C17 7 8 14 8 24C8 30 12 34 18 33C28 31 32 19 30 7Z"
+                  fill="#D9F3A5"/>
+            <path d="M10 31C15 24 20 19 28 12"
+                  stroke="#FFFFFF"
+                  stroke-width="2.5"
+                  stroke-linecap="round"/>
+            <path d="M29 3L31 8L36 10L31 12L29 17L27 12L22 10L27 8Z"
+                  fill="#FFFFFF"/>
+        </svg>
+    </span>
+    <span class="logo-word">Clean<span>AI</span></span>
+</a>
 
-        <a href="index.html" class="nav-button">Retour à l'accueil</a>
-    </header>
+    <nav class="nav-links">
+        <a href="index.html">Accueil</a>
+        <a href="index.html#apropos">À propos</a>
+        <a href="index.html#services">Services</a>
+    </nav>
+
+    <div class="navbar-actions">
+        <span class="pipeline-status">
+            <span class="status-dot"></span>
+            Prêt à analyser
+        </span>
+
+        <a href="index.html" class="nav-button">
+            Retour à l'accueil
+        </a>
+    </div>
+</header>
+
+<nav class="pipeline-nav" aria-label="Étapes de l'analyse">
+    <a href="#uploadSection" class="pipeline-step active">
+        <span class="step-number">01</span>
+        <span>Upload</span>
+    </a>
+
+    <a href="#analysisDashboard" class="pipeline-step">
+    <span class="step-number">02</span>
+    <span>Overview</span>
+</a>
+
+    <a href="#diagnosticsSection" class="pipeline-step">
+        <span class="step-number">03</span>
+        <span>Diagnostics</span>
+    </a>
+
+    <a href="#cleaningSection" class="pipeline-step">
+        <span class="step-number">04</span>
+        <span>Cleaning</span>
+    </a>
+
+    <a href="#comparisonSection" class="pipeline-step">
+        <span class="step-number">05</span>
+        <span>Diff Preview</span>
+    </a>
+
+    <a href="#qualityAuditSection" class="pipeline-step">
+        <span class="step-number">06</span>
+        <span>Report</span>
+    </a>
+</nav>
 
     <main class="analyser-page">
         <section class="analyser-heading">
@@ -34,7 +91,7 @@
             </p>
         </section>
 
-        <section class="upload-card">
+        <section class="upload-card" id="uploadSection">
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">↑</div>
 
@@ -42,9 +99,16 @@
 
                 <p>Choisissez un fichier depuis votre appareil.</p>
 
-                <p class="upload-formats">
-                    Formats acceptés : CSV, XLS et XLSX
-                </p>
+                
+<div class="encoding-selector">
+    <label for="fileEncoding">Encodage du fichier CSV :</label>
+
+    <select id="fileEncoding">
+        <option value="UTF-8" selected>UTF-8</option>
+        <option value="ISO-8859-1">ISO-8859-1 (Latin-1)</option>
+    </select>
+</div>
+
 
                 <label for="dataFile" class="upload-button">
                     Choisir un fichier
@@ -95,6 +159,10 @@
         <a href="index.html" class="back-link">← Retour à l'accueil</a>
     </main>
 
-    <script src="analyser.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvg@4.0.3/lib/umd.min.js"></script>
+<script src="analyser.js"></script>
 </body>
 </html>
